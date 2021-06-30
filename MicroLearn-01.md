@@ -60,3 +60,65 @@
   ```
   conn.Call("服务名.方法名", 传入参数, 传出参数)
   ```
+
+  # RPC相关函数
+  1. 注册rpc服务
+   ``` go
+   func (server * Server ) RegisterName(name string, rcvr interface{}) error
+   参1: 服务名
+   参2: 对应rpc对象. 该对象绑定方法满足如下条件
+        1) 必须导出的 -- 保外可见.
+        2) 方法必须有两个参数, 都必须是导出类型, 内建类型.
+        3) 方法的第二个参数必须是指针 (传出参数)
+        4) 方法只有一个error接口类型的返回值
+    例:
+    type World struct
+    }
+    func (this *World) HelloWorld (test1 string, resp *string) error{
+    }
+    rpc.RegisterNmae("test1", new(World))
+   ```
+2. 绑定RPC服务
+    ``` go
+    func (server *Server) ServeConn(conn is ReadWriterCloser){} 
+    ```
+
+3. 调用远程函数:
+   ``` go
+   func (client *Client) Call (serviceMethod String, args interface{}, reply interface{}) error
+   参1 "服务名.方法名"
+   args: 传入参数
+   reply: 传出参数 定义一个变量 ,取地址&
+   ```
+
+# RPC封装
+  ## 服务端封装
+  ``` go
+   //定义接口
+    type xxx interface{
+        方法名(传入参数,传出参数) error
+    } 
+    // 封装服务方法
+    func 封装函数名 (i 接口){
+        rpc.RegisterName("name", i)
+    })
+```
+## 客户端封装方法
+
+```  go
+// 定义类
+    type MyClient struct {
+    c *rpc.Client
+    }
+
+    // 绑定类方法
+    func (this MyClient) HelloWorld(a string, b *string)	error  {
+    err := this.c.Call("hello.HelloWorld", a, b)
+    return err
+
+    // 初始化客户端
+    func  ClientInit(addr string) MyClient  {
+	client, _ := rpc.Dial("tcp", addr)
+	return MyClient{c:client}
+    }
+```
